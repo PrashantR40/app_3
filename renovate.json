@@ -1,8 +1,13 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "platform": "github",
-  "extends": ["config:base", "config:best-practices"],
-  "labels": ["version_bump"],
+  "extends": [
+    "config:recommended",
+    "config:best-practices"
+  ],
+  "labels": [
+    "version_bump"
+  ],
   "forkProcessing": "enabled",
   "semanticCommits": "enabled",
   "dependencyDashboard": true,
@@ -10,16 +15,24 @@
   "separateMinorPatch": true,
   "prConcurrentLimit": 20,
   "prHourlyLimit": 20,
-  "excludeCommitPaths": ["**/*"],
-  "includePaths": ["embedded-bins/Makefile.variables"],
+  "excludeCommitPaths": [
+    "**/*"
+  ],
+  "includePaths": [
+    "embedded-bins/Makefile.variables"
+  ],
   "dockerfile": {
     "enabled": false
   },
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": ["Makefile.variables"],
-      "matchStrings": ["alpine_version\\s*=\\s*(?<currentValue>\\S+)"],
+      "fileMatch": [
+        "Makefile.variables"
+      ],
+      "matchStrings": [
+        "alpine_version\\s*=\\s*(?<currentValue>\\S+)"
+      ],
       "depNameTemplate": "alpine",
       "versioningTemplate": "semver",
       "datasourceTemplate": "endoflife-date",
