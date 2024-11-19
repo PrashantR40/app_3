@@ -1,0 +1,95 @@
+# options for analysis running
+run:
+  timeout: 15m
+
+  build-tags:
+    - hack
+  tests: true
+  modules-download-mode: readonly
+  allow-parallel-runners: true
+
+linters:
+  enable:
+    - depguard  # Checks if package imports are in a list of acceptable packages
+    - errorlint # Find code that will cause problems with Go's error wrapping scheme
+    - gofmt     # Checks whether code was gofmt-ed
+    - goheader  # Checks is file headers matche a given pattern
+    - revive    # Stricter drop-in replacement for golint
+
+linters-settings:
+  depguard:
+    rules:
+      cloud-provider:
+        list-mode: lax
+        files:
+          - "!**/pkg/k0scloudprovider/*.go"
+        deny:
+          - pkg: k8s.io/cloud-provider
+            desc: >-
+              Usages of the k8s cloud provider are only allowed from within the
+              k0s cloud provider package. This is to ensure that it's not
+              leaking global flags into k0s.
+      replacements:
+        list-mode: lax
+        deny:
+          - pkg: gopkg.in/yaml.v2
+            desc: Use sigs.k8s.io/yaml.
+          - pkg: gopkg.in/yaml.v3
+            desc: Use sigs.k8s.io/yaml.
+          - pkg: k8s.io/utils/pointer
+            desc: Use k8s.io/utils/ptr.
+      tests:
+        list-mode: lax
+        files:
+          - "!$test"
+          - "!**/internal/testutil/**"
+          - "!**/inttest/**"
+          - "!**/pkg/supervisor/pingpong*.go" # only used for testing
+        deny:
+          - pkg: github.com/k0sproject/k0s/internal/testutil
+            desc: Usage of test code outside of tests.
+          - pkg: github.com/stretchr/testify
+            desc: Usage of test code outside of tests.
+      inttests:
+        list-mode: lax
+        files:
+          - "!**/inttest/**/*"
+        deny:
+          - pkg: github.com/k0sproject/k0s/inttest
+            desc: Usage of integration test code outside of integration tests.
+  goheader:
+    template-path: .go-header.txt
+    values:
+      regexp:
+        year: 202[0-9]
+
+  revive:
+    rules:
+      # This forbids to name variables "close", which seems natural for "close" functions.
+      - name: redefines-builtin-id
+        disabled: true
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  exclude-dirs-use-default: false
+  exclude-dirs:
+    - build
+    - docs
+    - embedded-bins
+    - examples
+  exclude-files:
+    - "zz_*"
+  exclude-rules:
+    # https://github.com/denis-tingaikin/go-header/issues/18
+    # This means that the header checks are ineffective for all files with build tags.
+    - source: "^//go:build"
+      linters:
+        - goheader
+    # Ignore deprecations: They shouldn't break the CI. If this were the case,
+    # it would be pointless to have them. There's no way in reporting them as
+    # warnings without having a non-zero exit code.
+    # https://github.com/golangci/golangci-lint/pull/3184#issuecomment-1235438429
+    - linters:
+        - staticcheck
+      text: "^SA1019:"
